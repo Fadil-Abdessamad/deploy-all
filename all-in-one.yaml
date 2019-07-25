@@ -1,0 +1,187 @@
+#deploy database
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+  namespace: default
+spec:
+  type: ClusterIP
+  ports:
+  - name: mysql
+    port: 3306
+    protocol: TCP
+    targetPort: 3306
+  selector:
+    app: mysql
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  namespace: default
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+        name: mysql
+        version: latest
+    spec:
+      containers:
+      - image: ibmdigitalbank/datacontainer:latest
+        name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: root
+        - name: MYSQL_ALLOW_EMPTY_PASSWORD
+          value: "true"
+---
+#deploy mscredits
+apiVersion: v1
+kind: Service
+metadata:
+  name: mscredits
+  namespace: default
+spec:
+  ports:
+  - name: http
+    port: 8082
+    protocol: TCP
+    targetPort: 8082
+  selector:
+    app: mscredits
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  generation: 2
+  labels:
+    app: mscredits
+  name: mscredits
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mscredits
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: mscredits
+    spec:
+      containers:
+        - image: ibmdigitalbank/mscredits:latest
+          name: mscredits
+          ports:
+            - containerPort: 8082
+              name: http
+---
+#deploy mscompte
+apiVersion: v1
+kind: Service
+metadata:
+  name: mscomptes
+  namespace: default
+spec:
+  ports:
+  - name: http
+    port: 8081
+    protocol: TCP
+    targetPort: 8081
+  selector:
+    app: mscomptes
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  generation: 2
+  labels:
+    app: mscomptes
+  name: mscomptes
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mscomptes
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: mscomptes
+    spec:
+      containers:
+        - image: ibmdigitalbank/mscomptes:latest
+          name: mscomptes
+          ports:
+            - containerPort: 8081
+              name: http
+---
+#deploy mstansaction
+apiVersion: v1
+kind: Service
+metadata:
+  name: mstransactions
+  namespace: default
+spec:
+  ports:
+  - name: http
+    port: 8080
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: mstransactions
+  type: NodePort
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  annotations:
+    deployment.kubernetes.io/revision: "1"
+  generation: 2
+  labels:
+    app: mstransactions
+  name: mstransactions
+  namespace: default
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mstransactions
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: mstransactions
+    spec:
+      containers:
+        - image: ibmdigitalbank/mstransactions:latest
+          name: mstransactions
+          ports:
+            - containerPort: 8080
+              name: http
